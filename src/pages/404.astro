@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Erased" description="This page got erased.">
+  <div class="mt-16">
+    <p class="chalk fade-up text-[34px] sm:text-[44px] inline-flex items-center gap-4">
+      This page got erased.
+      <span class="mark" aria-hidden="true" style="--dur:600ms; --ease:ease-out; --delay:300ms">
+        <svg viewBox="0 0 60 30" width="60" height="30" class="!static" style="filter:url(#chalk-rough)">
+          <path d="M3 12 C 15 6, 30 18, 45 10 S 56 14, 57 12 M6 20 C 20 16, 34 24, 50 19" pathLength="1" stroke-width="5" opacity="0.35"></path>
+        </svg>
+      </span>
+    </p>
+    <p class="fade-up mt-6" style="--delay:150ms">
+      <a class="link" href="/">back home</a>
+    </p>
+  </div>
+</Layout>
+
+<style>
+  .mark > svg path {
+    stroke: var(--color-chalk);
+  }
+</style>

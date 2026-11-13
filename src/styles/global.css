@@ -1,0 +1,228 @@
+@import 'tailwindcss';
+
+/* ---------- Fonts (self-hosted, latin only, two weights each) ---------- */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Gaegu';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/gaegu-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Gaegu';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/gaegu-latin-700-normal.woff2') format('woff2');
+}
+
+/* ---------- Tokens ---------- */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-text: #e8e8e8;
+  --color-muted: #8a8a8a;
+  --color-chalk: #f2efe6;
+  --color-accent: #a8ecff;
+  --color-hairline: #1f1f1f;
+
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-chalk: 'Gaegu', 'Comic Sans MS', cursive;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- Base ---------- */
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+@media (min-width: 640px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+/* Focus: accent chalk outline, never removed */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- Chalk headings ---------- */
+.chalk {
+  font-family: var(--font-chalk);
+  color: var(--color-chalk);
+  text-shadow: 0 0 1px rgba(242, 239, 230, 0.45);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Links ---------- */
+.link {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  transition: color 150ms;
+}
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 150ms var(--ease-out);
+}
+.link:hover,
+.link:focus-visible {
+  color: var(--color-chalk);
+}
+.link:hover::after,
+.link:focus-visible::after,
+.link[aria-current='page']::after,
+.link[aria-current='location']::after {
+  transform: scaleX(1);
+}
+
+/* External arrow nudge */
+.link .ext {
+  /* stays a plain inline so punctuation after the link can't break away;
+     relative offsets (not transform) still give the 2px nudge */
+  position: relative;
+  top: 0;
+  left: 0;
+  transition:
+    top 150ms var(--ease-out),
+    left 150ms var(--ease-out);
+}
+.link:hover .ext {
+  top: -2px;
+  left: 2px;
+}
+
+/* ---------- Fade up (plays once when in view) ---------- */
+.fade-up {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 400ms var(--ease-out),
+    transform 400ms var(--ease-out);
+  transition-delay: var(--delay, 0ms);
+}
+.fade-up.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Chalk marks (drawn with the dash trick) ---------- */
+.mark {
+  /* inline (not inline-block) so trailing punctuation can't break onto the next line */
+  position: relative;
+  display: inline;
+  white-space: nowrap;
+}
+.mark > svg {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  filter: url(#chalk-rough);
+}
+.mark > svg path {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--dur, 700ms) var(--ease, ease-in-out);
+  transition-delay: var(--delay, 0ms);
+}
+.mark.drawn > svg path {
+  stroke-dashoffset: 0;
+}
+
+/* ---------- Timeline line draw ---------- */
+.tl-line {
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 1500ms var(--ease-out);
+}
+.is-in .tl-line {
+  transform: scaleY(1);
+}
+
+/* ---------- Reduced motion: show everything already drawn ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fade-up,
+  .mark > svg path,
+  .tl-line,
+  .link::after {
+    transition: none !important;
+  }
+  .fade-up {
+    opacity: 1;
+    transform: none;
+  }
+  .mark > svg path {
+    stroke-dashoffset: 0;
+  }
+  .tl-line {
+    transform: none;
+  }
+}
+
+/* ---------- Print: marks shown drawn ---------- */
+@media print {
+  .fade-up {
+    opacity: 1;
+    transform: none;
+  }
+  .mark > svg path {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- View transitions: 200ms fade, content only ---------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}

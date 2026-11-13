@@ -1,0 +1,49 @@
+---
+/**
+ * Wraps a word or phrase with an accent chalk mark that draws itself once in view.
+ *   <Chalk type="circle">hi</Chalk>
+ *   <Chalk type="underline" seed={2}>ship it</Chalk>
+ *
+ * Paths use pathLength="1" so the dash trick works at any width.
+ * Three variants per type, picked by a fixed seed, so marks differ but never change between visits.
+ */
+interface Props {
+  type?: 'circle' | 'underline';
+  seed?: number;
+  delay?: number; // ms
+}
+
+const { type = 'underline', seed = 0, delay = 0 } = Astro.props;
+
+const variants: Record<NonNullable<Props['type']>, { box: string; paths: string[]; dur: number; ease: string; style: string }> = {
+  circle: {
+    box: '0 0 100 40',
+    dur: 700,
+    ease: 'ease-in-out',
+    style: 'inset:-30% -10%; width:120%; height:160%',
+    paths: [
+      'M50 3 C 80 2, 98 9, 97 20 C 96 33, 70 38, 46 37 C 20 36, 3 30, 3 19 C 3 8, 26 3, 56 4',
+      'M48 4 C 76 1, 97 8, 97 19 C 97 31, 74 38, 49 38 C 22 38, 2 31, 3 20 C 4 9, 24 4, 52 3 C 60 3, 66 3, 70 4',
+      'M52 3 C 82 3, 98 10, 96 21 C 94 32, 72 37, 48 37 C 22 37, 2 31, 4 19 C 6 8, 28 2, 54 3',
+    ],
+  },
+  underline: {
+    box: '0 0 100 8',
+    dur: 500,
+    ease: 'ease-out',
+    style: 'left:-1%; bottom:-6px; width:102%; height:8px',
+    paths: ['M1 5 C 25 3, 55 6, 99 4', 'M1 4 C 30 6, 60 2, 99 5', 'M1 5 C 20 6, 70 2, 99 4'],
+  },
+};
+
+const v = variants[type];
+const d = v.paths[((seed % 3) + 3) % 3]!;
+const strokeWidth = 2.6;
+---
+
+<span class="mark" style={`--dur:${v.dur}ms; --ease:${v.ease}; --delay:${delay}ms`}>
+  <slot />
+  <svg viewBox={v.box} preserveAspectRatio="none" aria-hidden="true" focusable="false" style={v.style}>
+    <path d={d} pathLength="1" stroke-width={strokeWidth}></path>
+  </svg>
+</span>

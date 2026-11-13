@@ -1,0 +1,27 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer
+  class="w-full max-w-[700px] mx-auto px-5 py-8 border-t border-hairline text-[13px] text-muted flex flex-wrap items-center justify-between gap-x-6 gap-y-2"
+>
+  <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
+    <span>© {year}</span>
+    <span aria-hidden="true">·</span>
+    <span>Built with Astro, hosted on Cloudflare</span>
+    <span aria-hidden="true">·</span>
+    <a class="link" href="https://github.com/allesko64" rel="me noopener" target="_blank">GitHub</a>
+    <a class="link" href="https://x.com/ayush__64" rel="me noopener" target="_blank">X</a>
+  </p>
+  <a href="#top" class="link inline-flex items-center min-h-11" data-top>back to top ↑</a>
+</footer>
+
+<script>
+  document.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-top]');
+    if (!a) return;
+    e.preventDefault();
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+</script>

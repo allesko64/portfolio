@@ -1,0 +1,56 @@
+---
+/**
+ * Landing-page "Work" block: the two featured projects, one line each.
+ * Full write-ups (including Dossier) live on /projects.
+ */
+import { Image } from 'astro:assets';
+import LiveLink from './LiveLink.astro';
+import { featured } from '../data/projects';
+import alfredIcon from '../assets/icons/alfred.png';
+---
+
+<section class="mt-16 fade-up" aria-labelledby="work-heading">
+  <h2 id="work-heading" class="chalk text-3xl">Work</h2>
+
+  <ul class="mt-6 space-y-5">
+    {
+      featured.map((p) => (
+        <li class="flex items-start gap-4">
+          {p.slug === 'alfred' ? (
+            <Image
+              src={alfredIcon}
+              alt=""
+              width={40}
+              height={40}
+              densities={[1, 2, 3]}
+              class="shrink-0 w-10 h-10 rounded-md border border-hairline"
+            />
+          ) : (
+            <span
+              class="shrink-0 grid place-items-center w-10 h-10 rounded-md border border-hairline bg-[#16204a] text-[#ff3d8b]"
+              aria-hidden="true"
+            >
+              {/* git-branch mark, as in Git Lingo's logo */}
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="6" y1="3" x2="6" y2="15" />
+                <circle cx="18" cy="6" r="3" />
+                <circle cx="6" cy="18" r="3" />
+                <path d="M18 9a9 9 0 0 1-9 9" />
+              </svg>
+            </span>
+          )}
+          <p class="min-w-0">
+            <LiveLink href={p.live} preview={p.preview} class="link font-bold text-text">
+              {p.name}&nbsp;<span class="ext text-muted" aria-hidden="true">↗</span>
+            </LiveLink>
+            <span class="block text-sm text-muted mt-0.5">{p.oneLiner}</span>
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="mt-6 text-sm">
+    <a class="link text-muted" href="/projects">All projects, in detail →</a>
+  </p>
+</section>

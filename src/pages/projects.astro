@@ -1,0 +1,90 @@
+---
+import Layout from '../layouts/Layout.astro';
+import LiveLink from '../components/LiveLink.astro';
+import Diagram from '../components/Diagram.astro';
+import { projects } from '../data/projects';
+---
+
+<Layout title="Projects" description="Systems I built end to end and shipped to production.">
+  <h1 class="chalk fade-up text-[34px] sm:text-[44px]">Projects</h1>
+  <p class="fade-up mt-2 text-muted" style="--delay:150ms">
+    Things I built end to end and run in production.
+  </p>
+
+  <nav class="fade-up mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted" style="--delay:250ms" aria-label="Projects on this page">
+    {
+      projects.map((p) => (
+        <a class="link inline-flex items-center min-h-11" href={`#${p.slug}`} data-anchor={p.slug}>
+          {p.name}
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    projects.map((p, i) => (
+      <section
+        id={p.slug}
+        class:list={['fade-up scroll-mt-10', i === 0 ? 'mt-10' : 'mt-14 pt-14 border-t border-hairline']}
+        aria-labelledby={`${p.slug}-title`}
+        data-project
+      >
+        <h2 id={`${p.slug}-title`} class="font-sans font-bold text-[28px] sm:text-[32px] leading-tight tracking-[-0.01em] text-text">
+          {p.name}
+        </h2>
+        <p class="mt-1 text-sm text-muted">{p.kind}</p>
+
+        <p class="mt-4 max-w-[60ch]">{p.oneLiner}</p>
+
+        <ul class="mt-5 space-y-2 max-w-[62ch]">
+          {p.built.map((b) => (
+            <li class="relative pl-5 text-sm leading-relaxed text-muted">
+              <span class="absolute left-0 top-[0.7em] w-2 h-2 bg-accent" aria-hidden="true" />
+              {b}
+            </li>
+          ))}
+        </ul>
+
+        <Diagram data={p.diagram} id={p.slug} />
+
+        <ul class="mt-5 flex flex-wrap gap-2" aria-label="Stack">
+          {p.stack.map((s) => (
+            <li class="px-2 py-0.5 border border-hairline rounded-sm text-xs text-muted">{s}</li>
+          ))}
+        </ul>
+
+        <p class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <LiveLink href={p.live} preview={p.preview} class="link inline-flex items-center min-h-11 text-text" label={`${p.name} live site`}>
+            Live site&nbsp;<span class="ext text-accent" aria-hidden="true">↗</span>
+          </LiveLink>
+          <a class="link inline-flex items-center min-h-11 text-muted" href={p.repo} target="_blank" rel="noopener" aria-label={`${p.name} source on GitHub`}>
+            GitHub&nbsp;<span class="ext" aria-hidden="true">↗</span>
+          </a>
+        </p>
+      </section>
+    ))
+  }
+</Layout>
+
+<script>
+  // Keep the anchor link for the section currently on screen underlined.
+  const setup = () => {
+    const links = document.querySelectorAll<HTMLAnchorElement>('[data-anchor]');
+    const sections = document.querySelectorAll<HTMLElement>('[data-project]');
+    if (!links.length || !sections.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          links.forEach((l) =>
+            l.dataset.anchor === e.target.id ? l.setAttribute('aria-current', 'location') : l.removeAttribute('aria-current'),
+          );
+        }
+      },
+      { rootMargin: '-40% 0px -55% 0px' },
+    );
+    sections.forEach((s) => io.observe(s));
+  };
+  setup();
+  document.addEventListener('astro:after-swap', setup);
+</script>

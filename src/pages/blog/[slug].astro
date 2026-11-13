@@ -1,0 +1,133 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => import.meta.env.DEV || !data.draft);
+  const sorted = posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  return sorted.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: sorted[i - 1], older: sorted[i + 1] },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  newer?: CollectionEntry<'blog'>;
+  older?: CollectionEntry<'blog'>;
+}
+
+const { post, newer, older } = Astro.props;
+const { Content } = await render(post);
+const words = (post.body ?? '').split(/\s+/).filter(Boolean).length;
+const minutes = Math.max(1, Math.round(words / 220));
+const date = post.data.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+  <article class="max-w-[640px]">
+    <header class="fade-up">
+      <h1 class="font-sans font-bold text-[30px] sm:text-[38px] leading-[1.15] tracking-[-0.01em] text-text">
+        {post.data.title}
+      </h1>
+      <p class="mt-2 text-sm text-muted">
+        <time datetime={post.data.date.toISOString()}>{date}</time> · {minutes} min read
+        {post.data.draft && <span> · draft</span>}
+      </p>
+    </header>
+
+    <div class="post fade-up mt-10" style="--delay:150ms">
+      <Content />
+    </div>
+
+    {
+      post.data.xThread && (
+        <p class="mt-10 text-sm text-muted">
+          Originally a thread on{' '}
+          <a class="link" href={post.data.xThread} target="_blank" rel="noopener">
+            X&nbsp;<span class="ext" aria-hidden="true">↗</span>
+          </a>
+          .
+        </p>
+      )
+    }
+
+    <nav class="mt-16 pt-6 border-t border-hairline grid sm:grid-cols-2 gap-4 text-sm" aria-label="More posts">
+      {newer ? <a class="link text-muted" href={`/blog/${newer.id}`}>← {newer.data.title}</a> : <span />}
+      {older && <a class="link text-muted sm:text-right" href={`/blog/${older.id}`}>{older.data.title} →</a>}
+    </nav>
+    <p class="mt-6 text-sm"><a class="link text-muted" href="/blog">Back to blog</a></p>
+  </article>
+</Layout>
+
+<style is:global>
+  .post {
+    line-height: 1.75;
+  }
+  .post > * + * {
+    margin-top: 1.1em;
+  }
+  .post h2,
+  .post h3 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.25;
+    margin-top: 2em;
+  }
+  .post h2 {
+    font-size: 1.5rem;
+  }
+  .post h3 {
+    font-size: 1.2rem;
+  }
+  .post a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post ul,
+  .post ol {
+    padding-left: 1.25em;
+  }
+  .post ul {
+    list-style: square;
+  }
+  .post ol {
+    list-style: decimal;
+  }
+  .post li + li {
+    margin-top: 0.35em;
+  }
+  .post li::marker {
+    color: var(--color-accent);
+  }
+  .post blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1em;
+    color: var(--color-muted);
+  }
+  .post :not(pre) > code {
+    font-size: 0.9em;
+    padding: 0.1em 0.35em;
+    border: 1px solid var(--color-hairline);
+    border-radius: 3px;
+  }
+  .post pre {
+    padding: 1em 1.1em;
+    border: 1px solid var(--color-hairline);
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.6;
+  }
+  .post img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+  .post hr {
+    border: 0;
+    border-top: 1px solid var(--color-hairline);
+  }
+</style>

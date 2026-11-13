@@ -1,0 +1,286 @@
+---
+import Chalk from './Chalk.astro';
+
+const CF_HANDLE = 'allesko_64';
+const CF_URL = `https://codeforces.com/profile/${CF_HANDLE}`;
+
+// Rating is fetched at build time so it stays current with each deploy; falls back if the API is down.
+let rating = 1319;
+try {
+  const res = await fetch(`https://codeforces.com/api/user.info?handles=${CF_HANDLE}`, {
+    signal: AbortSignal.timeout(4000),
+  });
+  const data = (await res.json()) as { status: string; result?: { rating?: number }[] };
+  if (data.status === 'OK' && typeof data.result?.[0]?.rating === 'number') rating = data.result[0].rating;
+} catch {
+  /* keep fallback */
+}
+
+const socials = [
+  {
+    label: 'X',
+    href: 'https://x.com/ayush__64',
+    path: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z',
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/ayush-sharma-5b7938282/',
+    path: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
+  },
+];
+
+// Lives at public/ayush_sharma_resume.pdf.
+const RESUME_URL = '/ayush_sharma_resume.pdf';
+const RESUME_FILENAME = 'ayush_sharma_resume.pdf';
+---
+
+<section class="mt-10" aria-labelledby="intro-name">
+  <div class="fade-up flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+    <h1
+      id="intro-name"
+      class="font-sans font-bold text-text text-[34px] sm:text-[44px] leading-[1.1] tracking-[-0.01em]"
+    >
+      Ayush <span class="whitespace-nowrap">Sharma<span class="pixel" aria-hidden="true"></span></span>
+    </h1>
+
+    <div class="flex items-center gap-1 sm:gap-2">
+      <ul class="flex items-center" aria-label="Profiles">
+        {
+          socials.map((s, i) => (
+            <>
+              <li>
+                <a
+                  href={s.href}
+                  target="_blank"
+                  rel="me noopener"
+                  aria-label={s.label}
+                  title={s.label}
+                  class="grid place-items-center min-w-11 min-h-11 text-muted hover:text-accent focus-visible:text-accent transition-colors duration-150"
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" focusable="false">
+                    <path d={s.path} />
+                  </svg>
+                </a>
+              </li>
+              {i === 0 && (
+                <li class="relative group">
+                  <button
+                    type="button"
+                    aria-label="Download resume"
+                    aria-haspopup="dialog"
+                    aria-controls="resume-dialog"
+                    class="grid place-items-center min-w-11 min-h-11 text-muted hover:text-accent focus-visible:text-accent transition-colors duration-150 cursor-pointer"
+                    data-resume-open
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                      <path d="M12 3v12" />
+                      <path d="m7 10 5 5 5-5" />
+                      <path d="M5 21h14" />
+                    </svg>
+                  </button>
+                  <span
+                    class="pointer-events-none absolute left-1/2 top-full z-20 mt-1 -translate-x-1/2 whitespace-nowrap rounded-sm border border-hairline bg-bg px-2 py-1 text-xs text-text opacity-0 translate-y-1 transition duration-150 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0"
+                    aria-hidden="true"
+                  >
+                    Download resume
+                  </span>
+                </li>
+              )}
+            </>
+          ))
+        }
+      </ul>
+
+      <span
+        class="inline-flex items-center gap-1.5 min-h-11 pl-2 sm:pl-3 border-l border-hairline text-muted text-sm tabular-nums"
+        title="Page views"
+        data-views
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        <span class="sr-only">Page views:</span>
+        <span data-views-count aria-live="polite">—</span>
+      </span>
+    </div>
+  </div>
+
+  <p class="fade-up text-muted text-sm mt-1" style="--delay:150ms">
+    CS engineer · Bengaluru · Himachal Pradesh
+  </p>
+
+  <p class="fade-up mt-2 flex flex-wrap items-center gap-2" style="--delay:150ms">
+    <a
+      href={CF_URL}
+      target="_blank"
+      rel="me noopener"
+      class="inline-flex items-center gap-1.5 px-2 py-0.5 border border-hairline rounded-sm text-xs text-text hover:border-accent hover:text-accent transition-colors duration-150"
+      title={`Codeforces profile: ${CF_HANDLE}`}
+    >
+      <span class="text-muted">Codeforces</span>
+      <span class="font-bold tabular-nums">{rating}</span>
+      <span class="sr-only">rating, @{CF_HANDLE}</span>
+    </a>
+  </p>
+
+  <div class="fade-up mt-8 space-y-4 max-w-[60ch]" style="--delay:300ms">
+    <p>
+      I'm a developer and CS student in Bengaluru. I build products end to end and{' '}
+      <Chalk type="underline" seed={1} delay={600}>ship them to production</Chalk> myself. Right
+      now I'm working on{' '}
+      <Chalk type="underline" seed={0} delay={750}
+        ><a class="hover:text-chalk transition-colors duration-150" href="/projects#alfred">ALFRED</a></Chalk
+      >, an AI butler that takes a feature from idea to shipped code.
+    </p>
+    <p>
+      I like learning how things work behind the screen, and then telling others about it. I write
+      on my <a class="link" href="/blog">blog</a> and{' '}
+      <Chalk type="underline" seed={2} delay={900}
+        >build in public on{' '}
+        <a
+          class="hover:text-chalk transition-colors duration-150"
+          href="https://x.com/ayush__64"
+          target="_blank"
+          rel="me noopener">X&nbsp;<span class="ext" aria-hidden="true">↗</span></a
+        ></Chalk
+      >, sharing what I ship and what I learn.
+    </p>
+    <p>Outside of code, you'll find me playing basketball or football, or watching a sitcom.</p>
+  </div>
+</section>
+
+<dialog
+  id="resume-dialog"
+  class="resume-dialog m-auto p-0 bg-transparent text-text backdrop:bg-black/70"
+  aria-labelledby="resume-dialog-title"
+>
+  <div class="w-[min(calc(100vw-3rem),360px)] border border-hairline rounded-sm bg-bg p-6">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 id="resume-dialog-title" class="font-sans font-bold text-xl text-text">Resume</h2>
+        <p class="mt-1 text-sm text-muted">View it in your browser or save a copy.</p>
+      </div>
+      <button
+        type="button"
+        class="grid place-items-center min-w-11 min-h-11 -mr-3 -mt-3 text-muted hover:text-accent transition-colors duration-150 cursor-pointer"
+        aria-label="Close"
+        data-resume-close
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="mt-6 grid grid-cols-2 gap-3">
+      <a
+        href={RESUME_URL}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center justify-center gap-2 min-h-11 px-3 border border-hairline rounded-sm text-sm text-text hover:border-accent hover:text-accent transition-colors duration-150"
+        data-resume-close
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        View
+      </a>
+      <a
+        href={RESUME_URL}
+        download={RESUME_FILENAME}
+        class="inline-flex items-center justify-center gap-2 min-h-11 px-3 rounded-sm text-sm font-bold bg-accent text-bg hover:opacity-90 transition-opacity duration-150"
+        data-resume-close
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 3v12" />
+          <path d="m7 10 5 5 5-5" />
+          <path d="M5 21h14" />
+        </svg>
+        Download
+      </a>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  // Resume pop-up: native <dialog> gives focus trapping, Escape-to-close and focus return for free.
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const dialog = document.getElementById('resume-dialog') as HTMLDialogElement | null;
+    if (!dialog) return;
+
+    if (target.closest('[data-resume-open]')) {
+      dialog.showModal();
+      return;
+    }
+    // close on an option/close button, or on a click on the backdrop (the dialog element itself)
+    if (dialog.open && (target.closest('[data-resume-close]') || target === dialog)) {
+      dialog.close();
+    }
+  });
+</script>
+
+<script>
+  // Live view counter. Counts once per browser session; shows "—" if the API is unreachable.
+  const setup = async () => {
+    const out = document.querySelector<HTMLElement>('[data-views-count]');
+    if (!out) return;
+    const path = location.pathname.replace(/\/+$/, '') || '/';
+    const key = `viewed:${path}`;
+    const method = sessionStorage.getItem(key) ? 'GET' : 'POST';
+    try {
+      const res = await fetch(method === 'GET' ? `/api/views?path=${encodeURIComponent(path)}` : '/api/views', {
+        method,
+        headers: { 'content-type': 'application/json' },
+        body: method === 'POST' ? JSON.stringify({ path }) : undefined,
+      });
+      if (!res.ok) throw new Error();
+      const { count } = (await res.json()) as { count: number };
+      out.textContent = new Intl.NumberFormat('en-IN').format(count);
+      sessionStorage.setItem(key, '1');
+    } catch {
+      out.textContent = '—';
+    }
+  };
+  setup();
+  document.addEventListener('astro:after-swap', setup);
+</script>
+
+<style>
+  /* Resume pop-up: 200ms fade + small rise, matching the site's motion rules. */
+  .resume-dialog[open] {
+    animation: resume-in 200ms var(--ease-out);
+  }
+  .resume-dialog[open]::backdrop {
+    animation: resume-fade 200ms ease-out;
+  }
+  @keyframes resume-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes resume-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .resume-dialog[open],
+    .resume-dialog[open]::backdrop {
+      animation: none;
+    }
+  }
+
+  /* Accent pixel after the name: static, baseline-aligned, scales with the heading. */
+  .pixel {
+    display: inline-block;
+    width: 0.28em;
+    height: 0.28em;
+    margin-left: 0.15em;
+    background: var(--color-accent);
+    vertical-align: baseline;
+  }
+</style>

@@ -1,0 +1,29 @@
+{
+  "name": "ayush64-portfolio",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "og": "node scripts/og/render.mjs",
+    "typecheck": "wrangler types && astro check"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.7",
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "^7.4.11",
+    "tailwindcss": "^4.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "playwright-core": "~1.59.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.161.0"
+  }
+}

@@ -1,0 +1,60 @@
+---
+import Chalk from './Chalk.astro';
+const email = 'ayush64sharma@gmail.com';
+---
+
+<section class="mt-24 fade-up" aria-labelledby="hi-heading">
+  <h2 id="hi-heading" class="chalk text-3xl">
+    Say <Chalk type="circle" seed={2}>hi</Chalk>
+  </h2>
+
+  <p class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1">
+    <button
+      type="button"
+      class="link text-left min-h-11 cursor-pointer"
+      data-copy={email}
+      aria-describedby="copied"
+    >
+      {email}
+    </button>
+    <span id="copied" class="chalk text-accent text-lg opacity-0 transition-opacity duration-300" aria-live="polite"></span>
+    <a class="text-sm text-muted link" href={`mailto:${email}`}>open in mail app</a>
+  </p>
+
+  <ul class="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-x-7 gap-y-1">
+    <li>
+      <a class="link min-h-11 inline-flex items-center" href="https://github.com/allesko64" target="_blank" rel="me noopener">
+        GitHub&nbsp;<span class="ext" aria-hidden="true">↗</span>
+      </a>
+    </li>
+    <li>
+      <a class="link min-h-11 inline-flex items-center" href="https://x.com/ayush__64" target="_blank" rel="me noopener">
+        X @ayush__64&nbsp;<span class="ext" aria-hidden="true">↗</span>
+      </a>
+    </li>
+    <li>
+      <a class="link min-h-11 inline-flex items-center" href="/ayush_sharma_resume.pdf" download>
+        Resume <span class="ml-1 text-muted" aria-hidden="true">↓</span>
+      </a>
+    </li>
+  </ul>
+</section>
+
+<script>
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-copy]');
+    if (!btn) return;
+    const email = btn.dataset.copy!;
+    const out = document.getElementById('copied');
+    try {
+      await navigator.clipboard.writeText(email);
+      if (out) {
+        out.textContent = 'copied';
+        out.classList.remove('opacity-0');
+        setTimeout(() => out.classList.add('opacity-0'), 1500);
+      }
+    } catch {
+      location.href = `mailto:${email}`;
+    }
+  });
+</script>

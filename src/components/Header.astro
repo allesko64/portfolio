@@ -1,0 +1,48 @@
+---
+const links = [
+  { href: '/projects', label: 'Projects' },
+  { href: '/blog', label: 'Blog' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header class="w-full max-w-[700px] mx-auto px-5 pt-8 pb-10 flex items-center justify-between gap-4 sm:gap-6">
+  <a
+    href="/"
+    class="chalk text-[24px] sm:text-[26px] leading-none inline-block transition-transform duration-150 hover:-rotate-2 focus-visible:-rotate-2"
+    aria-label="Home"
+  >
+    ayush
+  </a>
+
+  <nav aria-label="Main">
+    <ul class="flex items-center gap-3 sm:gap-7 text-[12px] sm:text-sm text-muted">
+      {
+        links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              class="link inline-flex items-center min-h-11"
+              aria-current={path.startsWith(l.href) ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // Keep aria-current right after a view transition (header is persisted).
+  const sync = () => {
+    const path = location.pathname.replace(/\/$/, '') || '/';
+    document.querySelectorAll<HTMLAnchorElement>('header nav a').forEach((a) => {
+      const href = a.getAttribute('href') ?? '';
+      if (path.startsWith(href)) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  };
+  document.addEventListener('astro:page-load', sync);
+</script>

@@ -1,0 +1,314 @@
+---
+/**
+ * Self-drawing chalk diagram of how a project fits together.
+ *
+ * Input is a list of stages (columns on desktop, rows on mobile), each holding one or more
+ * boxes, plus the edges between boxes. Geometry is computed here, so diagrams stay data-only
+ * (see `diagram` in src/data/projects.ts).
+ *
+ * Behaviour: draws once when 40% visible (boxes → labels → arrows → accent path last);
+ * hover / focus / tap a box to highlight it and show its note; "redraw" replays.
+ * Reduced motion and print show it already drawn.
+ */
+export interface DNode {
+  id: string;
+  label: string;
+  note: string;
+  accent?: boolean;
+}
+export interface DEdge {
+  from: string;
+  to: string;
+  accent?: boolean;
+}
+export interface DiagramData {
+  title: string;
+  stages: DNode[][];
+  edges: DEdge[];
+}
+
+interface Props {
+  data: DiagramData;
+  id: string;
+}
+
+const { data, id } = Astro.props;
+
+const STEP = 80; // ms between pieces
+const BOX_H = 44;
+
+type Box = DNode & { x: number; y: number; w: number; h: number; order: number };
+
+function layout(dir: 'h' | 'v') {
+  const boxes = new Map<string, Box>();
+  let order = 0;
+  let W: number, H: number;
+
+  if (dir === 'h') {
+    W = 660;
+    const colW = W / data.stages.length;
+    const w = Math.min(124, colW - 26);
+    const maxK = Math.max(...data.stages.map((s) => s.length));
+    H = maxK * BOX_H + (maxK - 1) * 14 + 24;
+    data.stages.forEach((stage, i) => {
+      const total = stage.length * BOX_H + (stage.length - 1) * 14;
+      const top = (H - total) / 2;
+      stage.forEach((n, j) => {
+        boxes.set(n.id, { ...n, x: colW * (i + 0.5) - w / 2, y: top + j * (BOX_H + 14), w, h: BOX_H, order: order++ });
+      });
+    });
+  } else {
+    W = 320;
+    const rowH = BOX_H + 36;
+    H = data.stages.length * rowH - 36 + 8;
+    data.stages.forEach((stage, i) => {
+      const gap = 8;
+      const w = Math.min(150, (W - 8 - (stage.length - 1) * gap) / stage.length);
+      const total = stage.length * w + (stage.length - 1) * gap;
+      const left = (W - total) / 2;
+      stage.forEach((n, j) => {
+        boxes.set(n.id, { ...n, x: left + j * (w + gap), y: 4 + i * rowH, w, h: BOX_H, order: order++ });
+      });
+    });
+  }
+
+  const r = 6;
+  const boxPath = (b: Box) =>
+    `M${b.x + r} ${b.y} H${b.x + b.w - r} Q${b.x + b.w} ${b.y} ${b.x + b.w} ${b.y + r} V${b.y + b.h - r} ` +
+    `Q${b.x + b.w} ${b.y + b.h} ${b.x + b.w - r} ${b.y + b.h} H${b.x + r} Q${b.x} ${b.y + b.h} ${b.x} ${b.y + b.h - r} ` +
+    `V${b.y + r} Q${b.x} ${b.y} ${b.x + r} ${b.y} Z`;
+
+  const nBoxes = boxes.size;
+  const labelsAt = nBoxes * STEP + 250;
+  // plain edges first, accent edges last
+  const sorted = [...data.edges].sort((a, b) => Number(!!a.accent) - Number(!!b.accent));
+  const edges = sorted.map((e, k) => {
+    const a = boxes.get(e.from)!;
+    const b = boxes.get(e.to)!;
+    let d: string, head: string;
+    if (dir === 'h') {
+      const x1 = a.x + a.w + 3, y1 = a.y + a.h / 2, x2 = b.x - 4, y2 = b.y + b.h / 2;
+      const dx = (x2 - x1) / 2;
+      d = `M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}`;
+      head = `M${x2 - 6} ${y2 - 4} L${x2} ${y2} L${x2 - 6} ${y2 + 4}`;
+    } else {
+      const x1 = a.x + a.w / 2, y1 = a.y + a.h + 3, x2 = b.x + b.w / 2, y2 = b.y - 4;
+      const dy = (y2 - y1) / 2;
+      d = `M${x1} ${y1} C${x1} ${y1 + dy} ${x2} ${y2 - dy} ${x2} ${y2}`;
+      head = `M${x2 - 4} ${y2 - 6} L${x2} ${y2} L${x2 + 4} ${y2 - 6}`;
+    }
+    return { ...e, d, head, delay: labelsAt + 200 + k * STEP };
+  });
+
+  return { W, H, boxes: [...boxes.values()], boxPath, edges, labelsAt };
+}
+
+const views = [
+  { dir: 'h' as const, cls: 'hidden sm:block', font: 12 },
+  { dir: 'v' as const, cls: 'sm:hidden', font: 11 },
+].map((v) => ({ ...v, ...layout(v.dir) }));
+---
+
+<figure class="dg mt-8" data-dg aria-label={`Diagram: ${data.title}`}>
+  {
+    views.map((v) => (
+      <div class={v.cls}>
+        <svg
+          viewBox={`0 0 ${v.W} ${v.H}`}
+          class="block w-full h-auto overflow-visible"
+          role="group"
+          aria-label={data.title}
+        >
+          <g class="dg-strokes">
+            {v.edges.map((e) => (
+              <g class:list={['dg-edge', { accent: e.accent }]}>
+                <path class="draw" d={e.d} pathLength="1" style={`--d:${e.delay}ms`} />
+                <path class="draw head" d={e.head} pathLength="1" style={`--d:${e.delay + 380}ms`} />
+              </g>
+            ))}
+          </g>
+          {v.boxes.map((b) => (
+            <g
+              class:list={['dg-node', { accent: b.accent }]}
+              tabindex="0"
+              role="button"
+              aria-label={`${b.label}: ${b.note}`}
+              data-note={`${b.label}: ${b.note}`}
+              data-node={`${id}-${b.id}`}
+            >
+              <path class="draw box" d={v.boxPath(b)} pathLength="1" style={`--d:${b.order * STEP}ms`} />
+              <text
+                x={b.x + b.w / 2}
+                y={b.y + b.h / 2}
+                text-anchor="middle"
+                dominant-baseline="central"
+                font-size={v.font}
+                style={`--d:${v.labelsAt}ms`}
+              >
+                {b.label}
+              </text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    ))
+  }
+  <figcaption class="mt-3 flex items-start justify-between gap-4 text-xs text-muted">
+    <span class="dg-note min-h-[1.5em]" aria-live="polite" data-dg-note>Hover or tap a box to see what it does.</span>
+    <button type="button" class="link shrink-0 min-h-11 -mt-3 cursor-pointer" data-dg-redraw>redraw</button>
+  </figcaption>
+</figure>
+
+<style is:global>
+  .dg .dg-strokes,
+  .dg .dg-node path {
+    filter: url(#chalk-rough);
+  }
+  .dg path {
+    fill: none;
+    stroke: var(--color-chalk);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.85;
+  }
+  .dg .accent path,
+  .dg-node.accent .box {
+    stroke: var(--color-accent);
+    stroke-width: 2.2;
+    opacity: 1;
+  }
+  .dg text {
+    fill: var(--color-chalk);
+    font-family: var(--font-mono);
+    opacity: 0;
+    transition: opacity 300ms ease-out var(--d, 0ms);
+  }
+  .dg-node.accent text {
+    fill: var(--color-accent);
+  }
+  .dg-node {
+    cursor: pointer;
+    outline: none;
+  }
+  .dg-node .box {
+    transition:
+      stroke-dashoffset 420ms ease-in-out var(--d, 0ms),
+      stroke 150ms;
+  }
+  .dg-node:hover .box,
+  .dg-node:focus-visible .box,
+  .dg-node.is-active .box {
+    stroke: var(--color-accent);
+    stroke-width: 2.4;
+    opacity: 1;
+  }
+  .dg-node:hover text,
+  .dg-node:focus-visible text,
+  .dg-node.is-active text {
+    fill: var(--color-accent);
+  }
+
+  /* draw-on: every stroke starts hidden and reveals along its length */
+  .dg path.draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 420ms ease-in-out var(--d, 0ms);
+  }
+  .dg .head {
+    transition-duration: 160ms;
+  }
+  .dg.drawn path.draw {
+    stroke-dashoffset: 0;
+  }
+  .dg.drawn text {
+    opacity: 1;
+  }
+  .dg.dg-reset path.draw,
+  .dg.dg-reset text {
+    transition: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dg path.draw,
+    .dg text {
+      transition: none !important;
+    }
+    .dg path.draw {
+      stroke-dashoffset: 0;
+    }
+    .dg text {
+      opacity: 1;
+    }
+  }
+  @media print {
+    .dg path.draw {
+      stroke-dashoffset: 0;
+    }
+    .dg text {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  function setup() {
+    const figs = document.querySelectorAll<HTMLElement>('[data-dg]');
+    if (!figs.length) return;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('drawn');
+          io.unobserve(e.target);
+        }
+      },
+      { threshold: 0.4 },
+    );
+
+    figs.forEach((fig) => {
+      if (fig.dataset.ready) return;
+      fig.dataset.ready = '1';
+      if (reduced) fig.classList.add('drawn');
+      else io.observe(fig);
+
+      const note = fig.querySelector<HTMLElement>('[data-dg-note]')!;
+      const initial = note.textContent ?? '';
+      const nodes = fig.querySelectorAll<SVGGElement>('.dg-node');
+
+      const show = (n: SVGGElement | null) => {
+        nodes.forEach((x) => x.classList.toggle('is-active', !!n && x.dataset.node === n.dataset.node));
+        note.textContent = n?.dataset.note ?? initial;
+      };
+
+      nodes.forEach((n) => {
+        n.addEventListener('mouseenter', () => show(n));
+        n.addEventListener('focus', () => show(n));
+        n.addEventListener('click', () => show(n));
+        n.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            show(n);
+          }
+        });
+      });
+      fig.addEventListener('mouseleave', () => {
+        if (!fig.contains(document.activeElement)) show(null);
+      });
+
+      fig.querySelector('[data-dg-redraw]')!.addEventListener('click', () => {
+        // snap back to "undrawn" with transitions off, then draw again
+        fig.classList.add('dg-reset');
+        fig.classList.remove('drawn');
+        void fig.getBoundingClientRect();
+        fig.classList.remove('dg-reset');
+        void fig.getBoundingClientRect();
+        fig.classList.add('drawn');
+      });
+    });
+  }
+  setup();
+  document.addEventListener('astro:after-swap', setup);
+</script>

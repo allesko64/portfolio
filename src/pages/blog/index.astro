@@ -1,0 +1,82 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { reading } from '../../data/reading';
+
+const posts = (await getCollection('blog', ({ data }) => import.meta.env.DEV || !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+
+const fmt = (d: Date) => d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+const host = (u: string) => new URL(u).host.replace(/^www\./, '');
+---
+
+<Layout title="Blog" description="What I write, and what I think is worth reading.">
+  <h1 class="chalk fade-up text-[34px] sm:text-[44px]">Blog</h1>
+  <p class="fade-up mt-2 text-muted" style="--delay:150ms">
+    Notes on building things and keeping them running, plus posts by others I keep sending to people.
+  </p>
+
+  <nav class="fade-up mt-8 flex gap-6 text-sm text-muted" style="--delay:250ms" aria-label="Sections">
+    <a class="link inline-flex items-center min-h-11" href="#writing">My writing</a>
+    <a class="link inline-flex items-center min-h-11" href="#reading">Worth reading</a>
+  </nav>
+
+  {/* ---------- my posts ---------- */}
+  <section id="writing" class="fade-up mt-10 scroll-mt-10" aria-labelledby="writing-heading">
+    <h2 id="writing-heading" class="font-sans font-bold text-2xl text-text">My writing</h2>
+
+    {
+      posts.length === 0 ? (
+        <p class="mt-4 text-sm text-muted">Nothing published yet. First post soon.</p>
+      ) : (
+        <ul class="mt-4 divide-y divide-hairline">
+          {posts.map((p) => (
+            <li>
+              <a href={`/blog/${p.id}`} class="group grid sm:grid-cols-[110px_1fr] gap-x-4 gap-y-1 py-4">
+                <time datetime={p.data.date.toISOString()} class="text-xs text-muted tabular-nums sm:pt-1">
+                  {fmt(p.data.date)}
+                </time>
+                <span>
+                  <span class="block text-text group-hover:text-accent transition-colors duration-150">
+                    {p.data.title}
+                    {p.data.draft && <span class="ml-2 text-xs text-muted">(draft)</span>}
+                  </span>
+                  <span class="block mt-0.5 text-sm text-muted">{p.data.description}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+
+  {/* ---------- recommendations ---------- */}
+  <section id="reading" class="fade-up mt-16 scroll-mt-10" aria-labelledby="reading-heading">
+    <h2 id="reading-heading" class="font-sans font-bold text-2xl text-text">Worth reading</h2>
+    <p class="mt-1 text-sm text-muted">Posts by other people that changed how I build.</p>
+
+    {
+      reading.length === 0 ? (
+        <p class="mt-4 text-sm text-muted">List coming soon.</p>
+      ) : (
+        <ul class="mt-4 divide-y divide-hairline">
+          {reading.map((r) => (
+            <li>
+              <a href={r.url} target="_blank" rel="noopener" class="group block py-4">
+                <span class="block text-text group-hover:text-accent transition-colors duration-150">
+                  {r.title}&nbsp;<span class="text-muted" aria-hidden="true">↗</span>
+                </span>
+                <span class="block mt-0.5 text-xs text-muted">
+                  {r.author} · {host(r.url)}
+                </span>
+                {r.why && <span class="block mt-1 text-sm text-muted">{r.why}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</Layout>

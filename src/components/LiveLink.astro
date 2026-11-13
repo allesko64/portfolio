@@ -1,0 +1,121 @@
+---
+/**
+ * A link to a shipped site that shows a screenshot preview on hover or keyboard focus.
+ * The preview is decorative (aria-hidden); the link itself carries the meaning.
+ * Only shown on devices with a real pointer; touch users just follow the link.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  href: string;
+  preview: ImageMetadata;
+  class?: string;
+  label?: string; // accessible label override
+}
+
+const { href, preview, class: className = '', label } = Astro.props;
+const host = new URL(href).host;
+---
+
+<span class="live">
+  <a href={href} target="_blank" rel="noopener" class={className} aria-label={label}>
+    <slot />
+  </a>
+  <span class="live-card" aria-hidden="true">
+    <span class="live-bar">
+      <span class="live-dots"><i></i><i></i><i></i></span>
+      <span class="live-url">{host}</span>
+    </span>
+    <Image
+      src={preview}
+      alt=""
+      width={320}
+      widths={[320, 640]}
+      sizes="320px"
+      format="webp"
+      quality={80}
+      loading="lazy"
+      decoding="async"
+      class="block w-full h-auto"
+    />
+  </span>
+</span>
+
+<style>
+  .live {
+    position: relative;
+    display: inline;
+  }
+  .live-card {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .live-card {
+      display: block;
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 12px);
+      z-index: 40;
+      width: 320px;
+      overflow: hidden;
+      border: 1px solid var(--color-hairline);
+      border-radius: 6px;
+      background: var(--color-bg);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent),
+        0 18px 40px -12px rgb(0 0 0 / 0.8);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+      transform-origin: bottom left;
+      transition:
+        opacity 180ms var(--ease-out),
+        transform 180ms var(--ease-out);
+      transition-delay: 0ms;
+    }
+    /* small delay on enter so the card doesn't flash when the pointer just passes over */
+    .live:hover .live-card,
+    .live:focus-within .live-card {
+      opacity: 1;
+      transform: none;
+      transition-delay: 90ms;
+    }
+  }
+
+  .live-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 22px;
+    padding: 0 8px;
+    border-bottom: 1px solid var(--color-hairline);
+    background: #111;
+  }
+  .live-dots {
+    display: inline-flex;
+    gap: 4px;
+  }
+  .live-dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #333;
+  }
+  .live-url {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--color-muted);
+    padding-right: 26px; /* balance the dots so the url sits centred */
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-card {
+      transition: none !important;
+      transform: none !important;
+    }
+  }
+</style>

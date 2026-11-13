@@ -1,0 +1,76 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ChalkFilter from '../components/ChalkFilter.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = 'I build systems end to end and ship them to production.' } =
+  Astro.props;
+const fullTitle = title ? `${title} · Ayush Sharma` : 'Ayush Sharma';
+
+// Social share card (rendered by `pnpm og` into public/og.png).
+const site = Astro.site ?? new URL(Astro.url.origin);
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL('/og.png', site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{fullTitle}</title>
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ayush Sharma" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ayush Sharma — I build systems end to end and ship them to production." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@ayush__64" />
+    <meta name="twitter:creator" content="@ayush__64" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content="Ayush Sharma — I build systems end to end and ship them to production." />
+
+    <ClientRouter />
+  </head>
+  <body class="min-h-dvh flex flex-col bg-bg text-text">
+    <a
+      href="#content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-3 focus:py-2 focus:bg-bg focus:text-chalk"
+    >
+      Skip to content
+    </a>
+
+    <ChalkFilter />
+
+    <Header transition:persist />
+
+    <main id="content" class="flex-1 w-full max-w-[700px] mx-auto px-5 pb-24">
+      <slot />
+    </main>
+
+    <Footer transition:persist />
+
+    <script src="../scripts/reveal.ts"></script>
+  </body>
+</html>
