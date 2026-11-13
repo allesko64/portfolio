@@ -10,8 +10,7 @@
     {
       "binding": "DB",
       "database_name": "portfolio",
-      // Replace after `pnpm wrangler d1 create portfolio`. Any value works for local dev.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "a6ba32a2-f1b6-45f4-9aca-499f59f91109",
       "migrations_dir": "migrations"
     }
   ],
